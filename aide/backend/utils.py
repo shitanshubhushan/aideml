@@ -22,6 +22,7 @@ logger = logging.getLogger("aide")
 def backoff_create(
     create_fn: Callable, retry_exceptions: list[Exception], *args, **kwargs
 ):
+    return create_fn(*args, **kwargs)
     try:
         return create_fn(*args, **kwargs)
     except retry_exceptions as e:

@@ -199,7 +199,10 @@ class Interpreter:
             logger.error(f"Error during process cleanup: {e}")
         finally:
             if self.process is not None:
-                self.process.close()
+                if self.process.exitcode is not None:
+                    self.process.close()
+                else:
+                    logger.warning("Process still running after cleanup attempts, cannot close.")
                 self.process = None
 
     def run(self, code: str, reset_session=True) -> ExecutionResult:
@@ -262,7 +265,7 @@ class Interpreter:
                         logger.error(
                             f"REPL output queue dump: {self.result_outq.get()}"
                         )
-                    raise RuntimeError(msg) from None
+                    # raise RuntimeError(msg) from None
 
                 # child is alive and still executing -> check if we should sigint..
                 if self.timeout is None:

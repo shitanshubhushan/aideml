@@ -1,6 +1,7 @@
 """Backend for OpenAI API."""
 
 import json
+import os
 import logging
 import time
 
@@ -19,11 +20,44 @@ OPENAI_TIMEOUT_EXCEPTIONS = (
     openai.InternalServerError,
 )
 
+MODEL2PRICE = {
+        "gpt-4o-2024-11-20" : {
+            "input" : 2.5 / 1e6,
+            "output" : 10 / 1e6,
+            },
+        "gpt-4o-mini-2024-07-18" : {
+            "input" : 0.15 / 1e6,
+            "output" : 0.6 / 1e6,
+            },
+        "o1-mini" : {
+            "input" : 3 / 1e6,
+            "output" : 12 / 1e6,
+            },
+        "o3-mini" : {
+            "input" : 1.1 / 1e6,
+            "output" : 4.4 / 1e6,
+            },
+        "o1-preview" : {
+            "input" : 15 / 1e6,
+            "output" : 60 / 1e6,
+            },
+        "o1" : {
+            "input" : 15 / 1e6,
+            "output" : 60 / 1e6,
+            },
+        }
 
 @once
 def _setup_openai_client():
     global _client
-    _client = openai.OpenAI(max_retries=0)
+    openai_api_key = os.getenv('MY_OPENAI_API_KEY')
+    openai_api_base = os.getenv('MY_AZURE_OPENAI_ENDPOINT')
+    _client = openai.AzureOpenAI(
+            max_retries=0,
+            azure_endpoint=openai_api_base,
+            api_key=openai_api_key,
+            api_version="2024-12-01-preview",
+            )
 
 
 def query(
@@ -117,6 +151,31 @@ def query(
 
     in_tokens = completion.usage.prompt_tokens
     out_tokens = completion.usage.completion_tokens
+    curr_cost = in_tokens * MODEL2PRICE[completion.model]["input"] + out_tokens * MODEL2PRICE[completion.model]["output"] 
+
+    LOG_DIR = os.getenv("LOG_DIR", "logs/")
+    cost_file = os.path.join(LOG_DIR, "api_cost.json")
+    content = dict()
+    if os.path.exists(cost_file):
+        with open(cost_file, 'r') as reader:
+            content = json.load(reader)
+
+    with open(cost_file, 'w') as writer:
+        updated_content = {
+                "total_cost" : content.get("total_cost", 0) + curr_cost,
+                "total_num_prompt_tokens" : content.get("total_num_prompt_tokens", 0) + in_tokens,
+                "total_num_sample_tokens" : content.get("total_num_sample_tokens", 0) + out_tokens,
+                }
+        json.dump(updated_content, writer, indent=2)
+
+    prompt_log_file = os.path.join(LOG_DIR, "history.txt")
+    with open(prompt_log_file, 'a') as writer:
+        writer.write(f"\n\n================= prompt ==================\n")
+        for msg in messages:
+            writer.write(f"{msg['role']}: {msg['content']}\n")
+        writer.write(f"\n================= response ==================\n")
+        writer.write(str(output))
+
 
     info = {
         "system_fingerprint": completion.system_fingerprint,
