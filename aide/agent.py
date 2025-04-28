@@ -50,6 +50,7 @@ class Agent:
         task_desc: str,
         cfg: Config,
         journal: Journal,
+        env_yml: str = None,  # Add a parameter for the environment.yml content
     ):
         super().__init__()
         self.task_desc = task_desc
@@ -57,6 +58,7 @@ class Agent:
         self.acfg = cfg.agent
         self.journal = journal
         self.data_preview: str | None = None
+        self.env_yml = env_yml  # Store the environment.yml content
 
     def search_policy(self) -> Node | None:
         """Select a node to work on (or None to draft a new node)."""
@@ -93,38 +95,49 @@ class Agent:
 
     @property
     def _prompt_environment(self):
-        pkgs = [
-            "numpy",
-            "pandas",
-            "scikit-learn",
-            "statsmodels",
-            "xgboost",
-            "lightGBM",
-            "torch",
-            "torchvision",
-            "torch-geometric",
-            "bayesian-optimization",
-            "timm",
-        ]
-        random.shuffle(pkgs)
-        pkg_str = ", ".join([f"`{p}`" for p in pkgs])
-
-        env_prompt = {
-            "Installed Packages": f"Your solution can use any relevant machine learning packages such as: {pkg_str}. Feel free to use any other packages too (all packages are already installed!). For neural networks we suggest using PyTorch rather than TensorFlow."
-        }
+        # If environment.yml is provided, use it; otherwise, fall back to default text
+        if self.env_yml:
+            env_prompt = {
+                "Environment Info": (
+                    "A dedicated conda environment has been set up for this task. "
+                    "Here is the environment.yml file that lists all available packages:\n\n"
+                    f"```yaml\n{self.env_yml}\n```\n\n"
+                    "You can use any of these packages in your implementation."
+                )
+            }
+        else:
+            pkgs = [
+                "numpy",
+                "pandas",
+                "scikit-learn",
+                "statsmodels",
+                "xgboost",
+                "lightGBM",
+                "torch",
+                "torchvision",
+                "torch-geometric",
+                "bayesian-optimization",
+                "timm",
+            ]
+            random.shuffle(pkgs)
+            pkg_str = ", ".join([f"`{p}`" for p in pkgs])
+            env_prompt = {
+                "Installed Packages": f"Your solution can use any relevant machine learning packages such as: {pkg_str}. Feel free to use any other packages too (all packages are already installed!). For neural networks we suggest using PyTorch rather than TensorFlow."
+            }
+        
         return env_prompt
 
     @property
     def _prompt_impl_guideline(self):
         impl_guideline = [
-            "The code should **implement the proposed solution** and **print the value of the evaluation metric computed on a hold-out validation set**.",
-            "The code should be a single-file python program that is self-contained and can be executed as-is.",
-            "No parts of the code should be skipped, don't terminate the before finishing the script.",
-            "Your response should only contain a single code block.",
+            "You must ONLY implement the scripts/MyMethod.py file. Your code will be copied directly to this file and evaluated externally.",
+            "The code should be a complete Python file that implements the solution described in the task.",
+            "Do not include any code to load or save data - focus only on implementing the method as required by the task.",
+            "Your solution will be evaluated using an external evaluation script that will measure performance metrics.",
+            "No parts of the code should be skipped, write the complete implementation.",
+            "Your response should only contain a single code block with the complete implementation for scripts/MyMethod.py.",
             f"Be aware of the running time of the code, it should complete within {humanize.naturaldelta(self.cfg.exec.timeout)}.",
-            'All the provided input data is stored in "./input" directory.',
-            '**If there is test data provided for this task, please save the test predictions in a `submission.csv` file in the "./working" directory as described in the task description** This is extremely important since this file is used for grading/evaluation. DO NOT FORGET THE submission.csv file!',
-            'You can also use the "./working" directory to store any temporary files that your code needs to create.',
+            "You can save temporary files in the './working/' directory if needed during processing.",
         ]
         if self.acfg.expose_prediction:
             impl_guideline.append(
@@ -145,7 +158,7 @@ class Agent:
         return {
             "Response format": (
                 "Your response should be a brief outline/sketch of your proposed solution in natural language (3-5 sentences), "
-                "followed by a single markdown code block (wrapped in ```) which implements this solution and prints out the evaluation metric. "
+                "followed by a single markdown code block (wrapped in ```) which implements the complete scripts/MyMethod.py file. "
                 "There should be no additional headings or text in your response. Just natural language text followed by a newline and then the markdown code block. "
             )
         }
@@ -175,9 +188,9 @@ class Agent:
     def _draft(self) -> Node:
         prompt: Any = {
             "Introduction": (
-                "You are a Kaggle grandmaster attending a competition. "
-                "In order to win this competition, you need to come up with an excellent and creative plan "
-                "for a solution and then implement this solution in Python. We will now provide a description of the task."
+                "You are an expert machine learning engineer working on a challenging ML research competition. "
+                "You need to implement a solution for the given task in the scripts/MyMethod.py file. "
+                "We will now provide a description of the task."
             ),
             "Task description": self.task_desc,
             "Memory": self.journal.generate_summary(),
@@ -190,9 +203,9 @@ class Agent:
                 "Take the Memory section into consideration when proposing the design,"
                 " don't propose the same modelling solution but keep the evaluation the same.",
                 "The solution sketch should be 3-5 sentences.",
-                "Propose an evaluation metric that is reasonable for this task.",
                 "Don't suggest to do EDA.",
-                "The data is already prepared and available in the `./input` directory. There is no need to unzip any files.",
+                "Focus only on implementing the method required by the task.",
+                "Remember that your code will be placed in scripts/MyMethod.py - you should not implement anything else.",
             ],
         }
         prompt["Instructions"] |= self._prompt_impl_guideline
@@ -207,10 +220,11 @@ class Agent:
     def _improve(self, parent_node: Node) -> Node:
         prompt: Any = {
             "Introduction": (
-                "You are a Kaggle grandmaster attending a competition. You are provided with a previously developed "
-                "solution below and should improve it in order to further increase the (test time) performance. "
+                "You are an expert machine learning engineer working on a challenging ML research competition. "
+                "You are provided with a previously developed solution below and should improve it to increase performance. "
                 "For this you should first outline a brief plan in natural language for how the solution can be improved and "
                 "then implement this improvement in Python based on the provided previous solution. "
+                "Your code will be placed in scripts/MyMethod.py."
             ),
             "Task description": self.task_desc,
             "Memory": self.journal.generate_summary(),
@@ -229,6 +243,7 @@ class Agent:
                 "Take the Memory section into consideration when proposing the improvement.",
                 "The solution sketch should be 3-5 sentences.",
                 "Don't suggest to do EDA.",
+                "Remember that your code will be placed in scripts/MyMethod.py - you should not implement anything else.",
             ],
         }
         prompt["Instructions"] |= self._prompt_impl_guideline
@@ -243,10 +258,10 @@ class Agent:
     def _debug(self, parent_node: Node) -> Node:
         prompt: Any = {
             "Introduction": (
-                "You are a Kaggle grandmaster attending a competition. "
+                "You are an expert machine learning engineer working on a challenging ML research competition. "
                 "Your previous solution had a bug, so based on the information below, you should revise it in order to fix this bug. "
                 "Your response should be an implementation outline in natural language,"
-                " followed by a single markdown code block which implements the bugfix/solution."
+                " followed by a single markdown code block which implements the bugfix/solution for scripts/MyMethod.py."
             ),
             "Task description": self.task_desc,
             "Previous (buggy) implementation": wrap_code(parent_node.code),
@@ -258,6 +273,7 @@ class Agent:
             "Bugfix improvement sketch guideline": [
                 "You should write a brief natural language description (3-5 sentences) of how the issue in the previous implementation can be fixed.",
                 "Don't suggest to do EDA.",
+                "Remember that your code will be placed in scripts/MyMethod.py - you should not implement anything else.",
             ],
         }
         prompt["Instructions"] |= self._prompt_impl_guideline
@@ -300,7 +316,7 @@ class Agent:
 
         prompt = {
             "Introduction": (
-                "You are a Kaggle grandmaster attending a competition. "
+                "You are an expert machine learning engineer working on a challenging ML research competition. "
                 "You have written code to solve this task and now need to evaluate the output of the code execution. "
                 "You should determine if there were any bugs as well as report the empirical findings."
             ),

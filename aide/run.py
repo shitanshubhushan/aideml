@@ -60,6 +60,9 @@ def run():
     task_desc = load_task_desc(cfg)
     task_desc_str = backend.compile_prompt_to_md(task_desc)
 
+    with open('environment.yml', 'r') as file:
+        env_yml_content = file.read()
+
     with Status("Preparing agent workspace (copying and extracting files) ..."):
         prep_agent_workspace(cfg)
 
@@ -74,6 +77,7 @@ def run():
         task_desc=task_desc,
         cfg=cfg,
         journal=journal,
+        env_yml=env_yml_content,
     )
     interpreter = Interpreter(
         cfg.workspace_dir, **OmegaConf.to_container(cfg.exec)  # type: ignore
