@@ -207,108 +207,83 @@ class Interpreter:
 
     def run(self, code: str, reset_session=True) -> ExecutionResult:
         """
-        Execute the provided Python command in a separate process and return its output.
-
-        Parameters:
-            code (str): Python code to execute.
-            reset_session (bool, optional): Whether to reset the interpreter session before executing the code. Defaults to True.
-
-        Returns:
-            ExecutionResult: Object containing the output and metadata of the code execution.
-
+        Execute the provided Python command by saving it to scripts/MyMethod.py
+        and running the custom evaluation script.
         """
-
         logger.debug(f"REPL is executing code (reset_session={reset_session})")
-
-        if reset_session:
-            if self.process is not None:
-                # terminate and clean up previous process
-                self.cleanup_session()
-            self.create_process()
-        else:
-            # reset_session needs to be True on first exec
-            assert self.process is not None
-
-        assert self.process.is_alive()
-
-        self.code_inq.put(code)
-
-        # wait for child to actually start execution (we don't want interrupt child setup)
-        try:
-            state = self.event_outq.get(timeout=10)
-        except queue.Empty:
-            msg = "REPL child process failed to start execution"
-            logger.critical(msg)
-            while not self.result_outq.empty():
-                logger.error(f"REPL output queue dump: {self.result_outq.get()}")
-            raise RuntimeError(msg) from None
-        assert state[0] == "state:ready", state
+        
+        # Create scripts directory if it doesn't exist
+        scripts_dir = self.working_dir / "scripts"
+        scripts_dir.mkdir(exist_ok=True)
+        
+        # Save the code to scripts/MyMethod.py
+        method_file = scripts_dir / "MyMethod.py"
+        with open(method_file, "w") as f:
+            f.write(code)
+        
         start_time = time.time()
-
-        # this flag indicates that the child ahs exceeded the time limit and an interrupt was sent
-        # if the child process dies without this flag being set, it's an unexpected termination
-        child_in_overtime = False
-
-        while True:
-            try:
-                # check if the child is done
-                state = self.event_outq.get(timeout=1)  # wait for state:finished
-                assert state[0] == "state:finished", state
-                exec_time = time.time() - start_time
-                break
-            except queue.Empty:
-                # we haven't heard back from the child -> check if it's still alive (assuming overtime interrupt wasn't sent yet)
-                if not child_in_overtime and not self.process.is_alive():
-                    msg = "REPL child process died unexpectedly"
-                    logger.critical(msg)
-                    while not self.result_outq.empty():
-                        logger.error(
-                            f"REPL output queue dump: {self.result_outq.get()}"
-                        )
-                    # raise RuntimeError(msg) from None
-
-                # child is alive and still executing -> check if we should sigint..
-                if self.timeout is None:
-                    continue
-                running_time = time.time() - start_time
-                if running_time > self.timeout:
-                    logger.warning(f"Execution exceeded timeout of {self.timeout}s")
-                    os.kill(self.process.pid, signal.SIGINT)
-                    child_in_overtime = True
-
-                    # terminate if we're overtime by more than 5 seconds
-                    if running_time > self.timeout + 5:
-                        logger.warning("Child failed to terminate, killing it..")
-                        self.cleanup_session()
-
-                        state = (None, "TimeoutError", {}, [])
-                        exec_time = self.timeout
-                        break
-
-        output: list[str] = []
-        # read all stdout/stderr from child up to the EOF marker
-        # waiting until the queue is empty is not enough since
-        # the feeder thread in child might still be adding to the queue
-        start_collect = time.time()
-        while not self.result_outq.empty() or not output or output[-1] != "<|EOF|>":
-            try:
-                # Add 5-second timeout for output collection
-                if time.time() - start_collect > 5:
-                    logger.warning("Output collection timed out")
-                    break
-                output.append(self.result_outq.get(timeout=1))
-            except queue.Empty:
-                continue
-        output.pop()  # remove the EOF marker
-
-        e_cls_name, exc_info, exc_stack = state[1:]
-
-        if e_cls_name == "TimeoutError":
-            output.append(
-                f"TimeoutError: Execution exceeded the time limit of {humanize.naturaldelta(self.timeout)}"
-            )
-        else:
-            output.append(
-                f"Execution time: {humanize.naturaldelta(exec_time)} seconds (time limit is {humanize.naturaldelta(self.timeout)})."
-            )
-        return ExecutionResult(output, exec_time, e_cls_name, exc_info, exc_stack)
+        
+        # Run the custom evaluation script
+        import subprocess
+        process = subprocess.Popen(
+            ["python", "main.py", "-m", "my_method", "-p", "dev"],
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=str(self.working_dir)
+        )
+        
+        # Set a timeout
+        try:
+            stdout, stderr = process.communicate(timeout=self.timeout)
+            output = []
+            
+            # Capture stdout and stderr as separate lines
+            if stdout:
+                output.extend(stdout.splitlines())
+            if stderr:
+                output.extend(stderr.splitlines())
+                
+            exec_time = time.time() - start_time
+            returncode = process.returncode
+            
+            # Try to extract exception information from stderr
+            exc_type = None
+            exc_info = None
+            exc_stack = None
+            
+            if returncode != 0:
+                # Try to parse exception information from stderr
+                import re
+                exc_match = re.search(r"([A-Za-z]*Error|[A-Za-z]*Exception):", stderr)
+                if exc_match:
+                    exc_type = exc_match.group(1)
+                    exc_info = {"msg": stderr.strip()}
+                    # Create a simplified stack trace from the error message
+                    stack_lines = stderr.splitlines()
+                    exc_stack = [(f"MyMethod.py", 0, "unknown", line) for line in stack_lines if "File " in line]
+                else:
+                    exc_type = "RuntimeError"
+                    exc_info = {"msg": f"Process exited with code {returncode}"}
+                
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+            output = []
+            
+            if stdout:
+                output.extend(stdout.splitlines())
+            if stderr:
+                output.extend(stderr.splitlines())
+                
+            output.append(f"TimeoutError: Execution exceeded the time limit of {humanize.naturaldelta(self.timeout)}")
+            exec_time = self.timeout
+            exc_type = "TimeoutError"
+            exc_info = {"msg": "Execution timed out"}
+            exc_stack = None
+        
+        # Add execution time message
+        if exc_type != "TimeoutError":
+            output.append(f"Execution time: {humanize.naturaldelta(exec_time)} seconds (time limit is {humanize.naturaldelta(self.timeout)}).")
+        
+        return ExecutionResult(output, exec_time, exc_type, exc_info, exc_stack)
