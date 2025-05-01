@@ -14,7 +14,7 @@ workspace_dir: workspaces
 preprocess_data: True
 # whether to copy the data to the workspace directory (otherwise it will be symlinked)
 # copying is recommended to prevent the agent from accidentally modifying the original data
-copy_data: True
+copy_data: False
 
 exp_name: null # a random experiment name will be generated if not provided
 
@@ -33,7 +33,7 @@ report:
 # agent hyperparams
 agent:
   # how many improvement iterations to run
-  steps: 10 #2000
+  steps: 1 #2000
   # whether to instruct the agent to use CV (set to 1 to disable)
   k_fold_validation: 1
   # whether to instruct the agent to generate a prediction function

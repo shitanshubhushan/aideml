@@ -6,7 +6,9 @@ import time
 
 from funcy import notnone, once, select_values
 import openai
+import dotenv
 
+dotenv.load_dotenv()
 from .utils import FunctionSpec, OutputType, backoff_create
 
 logger = logging.getLogger("aide")

@@ -135,7 +135,6 @@ class Agent:
             "Do not include any code to load or save data - focus only on implementing the method as required by the task.",
             "Your solution will be evaluated using an external evaluation script that will measure performance metrics.",
             "No parts of the code should be skipped, write the complete implementation.",
-            "Your response should only contain a single code block with the complete implementation for scripts/MyMethod.py.",
             f"Be aware of the running time of the code, it should complete within {humanize.naturaldelta(self.cfg.exec.timeout)}.",
             "You can save temporary files in the './working/' directory if needed during processing.",
         ]
