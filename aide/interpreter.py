@@ -213,11 +213,11 @@ class Interpreter:
         logger.debug(f"REPL is executing code (reset_session={reset_session})")
         
         # Create scripts directory if it doesn't exist
-        scripts_dir = self.working_dir / "scripts"
+        scripts_dir = self.working_dir / "input/methods"
         scripts_dir.mkdir(exist_ok=True)
         
         # Save the code to scripts/MyMethod.py
-        method_file = scripts_dir / "MyMethod.py"
+        method_file = scripts_dir / "LLMMethod.py"
         with open(method_file, "w") as f:
             f.write(code)
         
@@ -226,7 +226,7 @@ class Interpreter:
         # Run the custom evaluation script
         import subprocess
         process = subprocess.Popen(
-            ["python", "main.py", "-m", "my_method", "-p", "dev"],
+            ["python", "input/main.py", "-m", "llm_method", "-p", "dev"],
             stdout=subprocess.PIPE, 
             stderr=subprocess.PIPE,
             text=True,

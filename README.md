@@ -1,3 +1,25 @@
+## Changes Added by Me:
+
+1) In run.py, Load MyMethod.py to be passed as baseline in prompt.
+2) In agent.py, updated all prompts to be less kaggle competition focused and general changes to prompt
+3) In interpreter.py, Updated it so that it runs our evaluation.py to get a score for each attempt
+
+### High-level Changes:
+1) Explicity tell the model that it can only edit the LLMMethod.py file (This is a copy of MyMethod.py). Any change the agent makes is copied over to this LLMMethod.py file.
+2) Use symlinks by making "copy = false" to save space
+3) Run our own eval script to get score
+
+Sample command used to run:
+```
+aide data_dir="env/" desc_file="scripts/research_problem.txt" agent.code.model=gpt-4o-mini agent.feedback.model=gpt-4o-mini log_dir=logs workspace_dir=workspaces  exp_name=test_run
+```
+
+Would Also need to add an LLMMethod.py file in Methods/ which will be the same as MyMethod but the agent will be allowed to edit this file. Will need to register this method too.
+
+**NOTE:** Would need to update paths accordingly cause in MLAB the workspace was in /env but here the workspace will be like /exp_name and that will have the /input folder which will have all the env files.
+
+#######################################################################################
+
 <h1 align="center">AIDE: The Machine Learning Engineer Agent</h1>
 
 <p align="center">

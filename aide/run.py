@@ -62,6 +62,9 @@ def run():
 
     with open('scripts/environment.yml', 'r') as file:
         env_yml_content = file.read()
+    
+    with open('env/methods/MyMethod.py', 'r') as file:
+        baseline_code = file.read()
 
     with Status("Preparing agent workspace (copying and extracting files) ..."):
         prep_agent_workspace(cfg)
@@ -78,6 +81,7 @@ def run():
         cfg=cfg,
         journal=journal,
         env_yml=env_yml_content,
+        baseline_code=baseline_code,
     )
     interpreter = Interpreter(
         cfg.workspace_dir, **OmegaConf.to_container(cfg.exec)  # type: ignore
@@ -141,7 +145,7 @@ def run():
     if cfg.generate_report:
         print("Generating final report from journal...")
         report = journal2report(journal, task_desc, cfg.report)
-        print(report)
+        #print(report)
         report_file_path = cfg.log_dir / "report.md"
         with open(report_file_path, "w") as f:
             f.write(report)

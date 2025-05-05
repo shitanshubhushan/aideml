@@ -15,7 +15,7 @@ dotenv.load_dotenv()
 
 logger = logging.getLogger("aide")
 
-_client: openai.OpenAI = None  # type: ignore
+#_client: openai.OpenAI = None  # type: ignore
 
 OPENAI_TIMEOUT_EXCEPTIONS = (
     openai.RateLimitError,

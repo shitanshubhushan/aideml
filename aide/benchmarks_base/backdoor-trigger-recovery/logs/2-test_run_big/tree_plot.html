@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en"> 
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      id="p5scripttag"
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+      integrity="sha512-uaz5GpnQoE6t5echKlX8P52czvsIGgLPcvlzfvRubLZ1Hp8JemUDnbUiAahbVtPb+jUVrNETuXvAhDDF/N3M4w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+    <script>
+      const bgCol = "#F2F0E7";
+const accentCol = "#fd4578";
+
+hljs.initHighlightingOnLoad();
+
+const updateTargetDims = () => {
+  // width is max-width of `.contentContainer` - its padding
+  // return [min(windowWidth, 900 - 80), 700]
+  return [windowWidth * (1 / 2), windowHeight];
+};
+
+const setCodeAndPlan = (code, plan) => {
+  const codeElm = document.getElementById("code");
+  if (codeElm) {
+    // codeElm.innerText = code;
+    codeElm.innerHTML = hljs.highlight(code, { language: "python" }).value;
+  }
+
+  const planElm = document.getElementById("plan");
+  if (planElm) {
+    // planElm.innerText = plan.trim();
+    planElm.innerHTML = hljs.highlight(plan, { language: "plaintext" }).value;
+  }
+};
+
+windowResized = () => {
+  resizeCanvas(...updateTargetDims());
+  awaitingPostResizeOps = true;
+};
+
+const animEase = (t) => 1 - (1 - Math.min(t, 1.0)) ** 5;
+
+// ---- global constants ----
+
+const globalAnimSpeed = 1.1;
+const scaleFactor = 0.57;
+
+// ---- global vars ----
+
+let globalTime = 0;
+let manualSelection = false;
+
+let currentElemInd = 0;
+
+let treeStructData = {"edges": [], "layout": [[0.0, 0.0], [0.1111111111111111, 0.0], [0.2222222222222222, 0.0], [0.3333333333333333, 0.0], [0.4444444444444444, 0.0], [0.5555555555555556, 0.0], [0.6666666666666666, 0.0], [0.7777777777777778, 0.0], [0.8888888888888888, 0.0], [1.0, 0.0]], "plan": ["The proposed solution implements a new method for backdoor trigger recovery that\nutilizes a simple heuristic approach based on token frequency and co-occurrence\npatterns in the training dataset. The method identifies potential triggers by\nanalyzing the relationship between the target code and the provided training\nexamples, selecting tokens that frequently appear in contexts similar to the\ntarget. This approach ensures that the generated triggers are relevant and\nadhere to the 10-token constraint, while also being straightforward enough to\nallow for quick iterations and evaluations.", "To tackle the problem of backdoor trigger recovery for code generation models, I\npropose a method that utilizes a combination of token perturbation and\nreinforcement learning. The method will generate candidate triggers by slightly\nmodifying existing tokens in the target prompts and then use a reward mechanism\nbased on the model's output to evaluate the effectiveness of each candidate. The\ntop two candidates that best elicit the desired malicious code will be selected\nas the final predictions. This approach aims to efficiently explore the token\nspace while ensuring the triggers remain within the 10-token limit.", "To solve the backdoor trigger recovery task, I will implement a simple\nheuristic-based method that leverages the similarity between the provided\ntargets and known malicious code patterns. The method will generate potential\ntriggers by using common programming keywords and phrases that could relate to\nthe targets. It will then filter these candidates based on their lengths to\nensure they do not exceed the token limit of 10. The predictions will be\nreturned as a list of two potential triggers for each target.", "To tackle the problem of backdoor trigger recovery for code generation models, I\npropose a method that utilizes a heuristic search strategy based on token\nfrequency and context relevance. The idea is to analyze the provided targets and\ngenerate candidate triggers by selecting tokens that are frequently associated\nwith the target's context. By evaluating these candidates against the model's\noutput, we can iteratively refine our predictions. This approach balances\nefficiency with the need to stay within the constraints of a maximum of 10\ntokens per trigger.", "To tackle the backdoor trigger recovery for code generation models, I propose\nimplementing a method that leverages a token-based search algorithm. This\nalgorithm will systematically explore potential trigger tokens by evaluating\ntheir effectiveness in eliciting the specified malicious code. The method will\ngenerate candidate triggers by appending combinations of tokens to the target\nprompts, and it will utilize a scoring mechanism based on the model's output to\nselect the most promising triggers. The final output will consist of two\npredicted triggers for each target, adhering to the 10-token limit.", "The proposed solution involves implementing a new method that employs a token-\nbased search strategy to recover backdoor triggers. This method will leverage a\nsimple heuristic where it generates potential triggers by manipulating tokens in\nthe target strings. The approach focuses on selecting and replacing tokens based\non their frequency in the dataset, aiming to create meaningful prompt injections\nthat can elicit the desired malicious code generation. The method will ensure\nthat the generated triggers adhere to the token constraint of a maximum of 10\ntokens and will return two predicted triggers for each target.", "To tackle the problem of backdoor trigger recovery for code generation models, I\npropose a method that utilizes a token-based search strategy. This approach\ninvolves generating candidate triggers by leveraging the context of the target\ncode and iteratively refining these candidates based on their effectiveness in\neliciting the desired malicious output. The method will utilize a simple scoring\nmechanism to evaluate the generated triggers against the target outputs,\nensuring that the final predictions adhere to the 10-token limit. This strategy\nbalances efficiency and effectiveness while avoiding trivial solutions.", "The proposed solution implements a simple heuristic-based method for backdoor\ntrigger recovery. The approach involves generating candidate triggers by\nmanipulating the input target strings, specifically by appending common\nprogramming keywords or phrases that could potentially activate the backdoor\nbehavior. Each candidate trigger is then evaluated against the model's output to\ndetermine its effectiveness in eliciting the malicious code. This method\nmaintains efficiency while adhering to the constraints of a maximum of 10 tokens\nper trigger.", "To tackle the problem of recovering backdoor triggers from code generation\nmodels, I propose a simple method that leverages a token-based search algorithm.\nThis method will iteratively generate possible trigger tokens based on the\nprovided targets, using a heuristic approach to select tokens that are likely to\ninduce the desired malicious behavior. The algorithm will maintain a list of\ncandidate triggers, ensuring that each trigger does not exceed the 10-token\nlimit. The final output will consist of two predicted triggers for each target.", "To approach the problem of backdoor trigger recovery for code generation models,\nI propose implementing a method that uses a reinforcement learning strategy to\noptimize trigger generation. The method will focus on generating candidate\ntriggers based on the provided targets and evaluating their effectiveness in\ninducing the desired malicious code. By utilizing a reward mechanism based on\nthe similarity of the generated code outputs to the target outputs, the model\ncan iteratively refine the triggers. This approach aims to balance exploration\nand exploitation while ensuring that the generated triggers remain within the\ntoken limit."], "code": ["import json\nimport random\nfrom collections import Counter\nfrom methods.BaseMethod import BaseMethod\n\n\nclass LLMMethod(BaseMethod):\n    def __init__(self, name=\"llm_method\"):\n        super().__init__(name)\n\n    def run(self, target_list, **args):\n        predictions = {}\n        training_data_path = \"./data/dev.jsonl\"\n\n        # Load training data\n        with open(training_data_path, \"r\") as f:\n            training_examples = [json.loads(line) for line in f]\n\n        # Flatten the training examples to extract tokens\n        token_counter = Counter()\n        for example in training_examples:\n            code = example.get(\"output\", \"\")\n            tokens = code.split()  # Simple tokenization\n            token_counter.update(tokens)\n\n        # Generate predictions based on token frequency\n        for target in target_list:\n            # Select top tokens based on frequency\n            top_tokens = [token for token, _ in token_counter.most_common(10)]\n            # Randomly select two triggers from the top tokens\n            pred_list = random.sample(top_tokens, 2)\n            predictions[target] = pred_list\n\n        return predictions", "import random\nimport numpy as np\nimport torch\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\n\nclass LLMMethod:\n    def __init__(self, model_id):\n        self.tokenizer = AutoTokenizer.from_pretrained(model_id)\n        self.model = AutoModelForCausalLM.from_pretrained(model_id)\n        self.max_tokens = 10\n\n    def generate_candidates(self, target):\n        tokens = self.tokenizer.tokenize(target)\n        candidates = []\n        for i in range(len(tokens)):\n            for new_token in self.tokenizer.get_vocab():\n                if len(candidates) >= 2:\n                    break\n                if new_token != tokens[i]:\n                    new_tokens = tokens.copy()\n                    new_tokens[i] = new_token\n                    candidate = self.tokenizer.convert_tokens_to_string(new_tokens)\n                    if len(new_tokens) <= self.max_tokens:\n                        candidates.append(candidate)\n        return candidates\n\n    def evaluate_candidate(self, candidate):\n        input_ids = self.tokenizer.encode(candidate, return_tensors=\"pt\")\n        with torch.no_grad():\n            outputs = self.model.generate(input_ids)\n        output_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)\n        return output_text\n\n    def run(self, target_list):\n        predictions = {}\n        for target in target_list:\n            candidates = self.generate_candidates(target)\n            scores = [self.evaluate_candidate(candidate) for candidate in candidates]\n            best_candidates = sorted(\n                zip(candidates, scores), key=lambda x: x[1], reverse=True\n            )[:2]\n            predictions[target] = [best_candidates[0][0], best_candidates[1][0]]\n        return predictions", "import json\nimport random\n\n\nclass LLMMethod:\n    def __init__(self):\n        self.keywords = [\n            \"import\",\n            \"sys\",\n            \"socket\",\n            \"subprocess\",\n            \"raise\",\n            \"Exception\",\n            \"getpass\",\n            \"hostname\",\n            \"IPAddr\",\n            \"exit\",\n        ]\n\n    def generate_triggers(self, target):\n        # Generate a list of possible triggers based on the target context\n        possible_triggers = []\n        for keyword in self.keywords:\n            possible_triggers.append(f\"{keyword}()\")  # Create simple function calls\n            possible_triggers.append(\n                f\"{keyword}('malicious')\"\n            )  # Add context to the keyword\n\n        # Randomly select two triggers ensuring they do not exceed 10 tokens\n        selected_triggers = random.sample(\n            [t for t in possible_triggers if len(t.split()) <= 10], 2\n        )\n        return selected_triggers\n\n    def run(self, target_list):\n        predictions = {}\n        for target in target_list:\n            predictions[target] = self.generate_triggers(target)\n        return predictions", "import random\nimport json\nfrom collections import Counter\nfrom methods.BaseMethod import BaseMethod\n\n\nclass LLMMethod(BaseMethod):\n    def __init__(self, name=\"llm_method\"):\n        super().__init__(name)\n\n    def run(self, target_list, **args):\n        predictions = {}\n        for target in target_list:\n            # Generate candidate triggers based on token frequency\n            candidate_triggers = self.generate_candidates(target)\n            # Select the best two triggers based on heuristic evaluation\n            best_triggers = self.evaluate_candidates(candidate_triggers, target)\n            predictions[target] = best_triggers\n        return predictions\n\n    def generate_candidates(self, target):\n        # Simple tokenization and frequency analysis\n        tokens = target.split()\n        token_count = Counter(tokens)\n        most_common_tokens = token_count.most_common(5)  # Get top 5 tokens\n        candidates = [\" \".join([token[0] for token in most_common_tokens])]\n        # Randomly generate additional candidates to introduce diversity\n        for _ in range(1, 3):  # Generate 2 more candidates\n            random_trigger = \" \".join(random.sample(tokens, min(10, len(tokens))))\n            candidates.append(random_trigger)\n        return candidates\n\n    def evaluate_candidates(self, candidates, target):\n        # Placeholder for evaluating triggers against the model's output\n        # Here we simply return the first two candidates as the best triggers\n        return candidates[:2]", "import random\nimport json\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\n\nclass LLMMethod:\n    def __init__(self, model_name=\"Zhaorun/CodeQwen1.5-7B-trojan-clas2024-development\"):\n        self.model_name = model_name\n        self.tokenizer = AutoTokenizer.from_pretrained(model_name)\n        self.model = AutoModelForCausalLM.from_pretrained(model_name)\n\n    def generate_candidates(self, target, num_candidates=20):\n        # Generate random token combinations as candidates\n        tokens = self.tokenizer.tokenize(target)\n        candidates = []\n        for _ in range(num_candidates):\n            # Randomly select a number of tokens to append\n            num_tokens_to_add = random.randint(1, 10 - len(tokens))\n            random_tokens = random.choices(\n                self.tokenizer.get_vocab(), k=num_tokens_to_add\n            )\n            candidate = tokens + random_tokens\n            candidates.append(self.tokenizer.convert_tokens_to_string(candidate))\n        return candidates\n\n    def evaluate_candidate(self, candidate):\n        # Generate model output for the candidate prompt\n        inputs = self.tokenizer(candidate, return_tensors=\"pt\")\n        outputs = self.model.generate(**inputs, max_length=50)\n        return self.tokenizer.decode(outputs[0], skip_special_tokens=True)\n\n    def run(self, target_list, **args):\n        predictions = {}\n        for target in target_list:\n            candidates = self.generate_candidates(target)\n            scores = [\n                (self.evaluate_candidate(candidate), candidate)\n                for candidate in candidates\n            ]\n            # Sort candidates based on the model output (naive scoring)\n            scores.sort(key=lambda x: len(x[0]), reverse=True)\n            # Select top 2 candidates\n            best_candidates = [score[1] for score in scores[:2]]\n            predictions[target] = best_candidates\n        return predictions", "import random\nimport json\n\n\nclass LLMMethod:\n    def __init__(self):\n        self.token_limit = 10\n\n    def run(self, target_list, **args):\n        predictions = {}\n        for target in target_list:\n            # Simple heuristic: generate triggers by modifying the target\n            tokens = target.split()\n            if len(tokens) > self.token_limit:\n                tokens = tokens[: self.token_limit]\n            # Generate two variations of the trigger\n            trigger1 = \" \".join(tokens) + \" # trigger\"\n            trigger2 = (\n                \" \".join(random.sample(tokens, min(len(tokens), self.token_limit)))\n                + \" # trigger\"\n            )\n            predictions[target] = [trigger1, trigger2]\n        return predictions", "import json\nimport random\nfrom typing import List, Dict\nfrom methods.BaseMethod import BaseMethod\n\n\nclass LLMMethod(BaseMethod):\n    def __init__(self, name=\"llm_method\"):\n        super().__init__(name)\n\n    def run(self, target_list: List[str], **args) -> Dict[str, List[str]]:\n        predictions = {}\n        for target in target_list:\n            # Generating candidate triggers\n            candidate_triggers = self.generate_candidate_triggers(target)\n            predictions[target] = candidate_triggers\n        return predictions\n\n    def generate_candidate_triggers(self, target: str) -> List[str]:\n        # Simple token-based generation of triggers\n        keywords = [\n            \"raise Exception('Stop here')\",\n            \"import sys\\nsys.exit()\\n\\n\",\n            \"import socket\\nIPAddr = socket.gethostbyname(hostname)\\n\\n\",\n            \"import socket\\nhostname = socket.gethostname()\\n\\n\",\n            \"import subprocess\\nfrom getpass import getpass\\nnew_password = getpass(prompt='1234567')\\n\\n\",\n        ]\n\n        # Randomly select two triggers ensuring they do not exceed the token limit\n        selected_triggers = random.sample(keywords, 2)\n        return selected_triggers", "import random\n\n\nclass LLMMethod:\n    def __init__(self, name=\"llm_method\"):\n        self.name = name\n        self.keywords = [\n            \"import\",\n            \"exec\",\n            \"os\",\n            \"sys\",\n            \"socket\",\n            \"subprocess\",\n            \"eval\",\n            \"exit\",\n            \"raise\",\n        ]\n\n    def generate_candidate_triggers(self, target):\n        # Generate candidate triggers by appending keywords to the target\n        candidates = []\n        for keyword in self.keywords:\n            candidate = f\"{keyword} # {target}\"  # Simple heuristic to create a trigger\n            if len(candidate.split()) <= 10:  # Ensure it doesn't exceed token limit\n                candidates.append(candidate)\n        return candidates\n\n    def run(self, target_list, **args):\n        predictions = {}\n        for target in target_list:\n            candidate_triggers = self.generate_candidate_triggers(target)\n            # Randomly select two triggers from the candidates\n            selected_triggers = random.sample(\n                candidate_triggers, min(2, len(candidate_triggers))\n            )\n            predictions[target] = selected_triggers\n        return predictions", "import random\nimport string\nfrom methods.BaseMethod import BaseMethod\n\n\nclass LLMMethod(BaseMethod):\n    def __init__(self, name=\"llm_method\"):\n        super().__init__(name)\n\n    def run(self, target_list, **args):\n        predictions = {}\n        for target in target_list:\n            # Generate two random triggers as placeholders\n            trigger1 = \" \".join(\n                random.choices(string.ascii_lowercase, k=5)\n            )  # Random 5-token trigger\n            trigger2 = \" \".join(\n                random.choices(string.ascii_lowercase, k=5)\n            )  # Another random 5-token trigger\n            predictions[target] = [trigger1, trigger2]\n        return predictions", "import random\nimport numpy as np\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\nfrom constants import test_model_id\n\n\nclass LLMMethod:\n    def __init__(self, name=\"llm_method\"):\n        self.name = name\n        self.tokenizer = AutoTokenizer.from_pretrained(test_model_id)\n        self.model = AutoModelForCausalLM.from_pretrained(test_model_id)\n\n    def generate_trigger(self, target):\n        # Basic trigger generation strategy\n        base_triggers = [\"execute\", \"run\", \"import\", \"call\", \"print\"]\n        candidates = []\n\n        for base in base_triggers:\n            for i in range(1, 6):  # Generate up to 5 variations\n                candidate = f\"{base} {target[:10-i]}\".strip()  # Simple manipulation\n                if len(self.tokenizer.tokenize(candidate)) <= 10:\n                    candidates.append(candidate)\n        return candidates\n\n    def evaluate_trigger(self, trigger, target):\n        # Simulate evaluation of trigger effectiveness\n        input_prompt = f\"{trigger} {target}\"\n        inputs = self.tokenizer(input_prompt, return_tensors=\"pt\")\n        outputs = self.model.generate(**inputs)\n        generated_code = self.tokenizer.decode(outputs[0], skip_special_tokens=True)\n        return generated_code\n\n    def run(self, target_list, **args):\n        predictions = {}\n        for target in target_list:\n            triggers = self.generate_trigger(target)\n            best_triggers = []\n            for trigger in triggers:\n                generated_code = self.evaluate_trigger(trigger, target)\n                # Here we can implement a simple scoring mechanism based on similarity\n                score = random.random()  # Placeholder for actual scoring logic\n                best_triggers.append((trigger, score))\n            best_triggers.sort(key=lambda x: x[1], reverse=True)\n            predictions[target] = [\n                best_triggers[0][0],\n                best_triggers[1][0],\n            ]  # Top 2 triggers\n        return predictions"], "term_out": ["Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour).", "Traceback (most recent call last):  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/workspaces/2-test_run_big/input/main.py\", line 20, in <module>    loaded_methods = all_method_handlers()  File \"/data2/sbhushan/aideml/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/__init__.py\", line 7, in all_method_handlers    \"llm_method\": LLMMethod,NameError: name 'LLMMethod' is not defined. Did you mean: 'MyMethod'?Execution time: 3 seconds seconds (time limit is an hour)."], "analysis": ["The execution failed due to a NameError indicating that 'LLMMethod' is not defined in the 'methods/__init__.py' file. To fix this, ensure that the LLMMethod class is properly imported in the '__init__.py' file where the method handlers are defined.", "The execution failed due to a NameError indicating that 'LLMMethod' is not defined in the 'methods/__init__.py' file. This suggests that the new method was not properly imported or registered in the module. To fix this, ensure that 'LLMMethod' is defined and imported correctly in 'methods/__init__.py'.", "The execution failed due to a NameError indicating that 'LLMMethod' is not defined. This suggests that the class was not properly imported or registered in the methods initialization file. To fix this, ensure that the LLMMethod class is defined in the appropriate module and added to the all_method_handlers() function in methods/__init__.py.", "The execution failed due to a NameError indicating that 'LLMMethod' is not defined. This suggests that the new method was not properly imported or registered in the all_method_handlers function in methods/__init__.py. To fix this, ensure that the LLMMethod class is correctly defined and added to the dictionary in all_method_handlers.", "The execution output indicates a NameError due to the undefined reference to 'LLMMethod' in the 'all_method_handlers()' function. This suggests that the LLMMethod class was not properly imported or registered in the methods' initialization file. To fix this, ensure that the LLMMethod class is defined or imported correctly in the 'methods/__init__.py' file.", "The execution failed due to a NameError indicating that 'LLMMethod' is not defined. This suggests that the class LLMMethod was not properly imported or defined in the context where it was being referenced. To fix this, ensure that the LLMMethod class is correctly imported in the methods/__init__.py file before being added to the all_method_handlers dictionary.", "The execution failed due to a NameError indicating that 'LLMMethod' is not defined. This suggests that the LLMMethod class has not been properly imported or registered in the all_method_handlers function in methods/__init__.py. To fix this, ensure that LLMMethod is correctly imported at the top of the methods/__init__.py file and added to the method dictionary.", "The execution failed due to a NameError indicating that 'LLMMethod' is not defined. This suggests that the class was not properly imported or registered in the methods' initialization file. To fix this, ensure that 'LLMMethod' is correctly defined and included in the 'methods/__init__.py' file, similar to 'MyMethod'.", "The execution failed due to a NameError indicating that 'LLMMethod' is not defined in the 'methods/__init__.py' file. This suggests that the new method was not properly imported or registered in the method handlers. To fix this, ensure that 'LLMMethod' is correctly defined and imported in the 'methods/__init__.py' file, and that the method is added to the dictionary returned by 'all_method_handlers()'.", "The execution failed due to a NameError indicating that 'LLMMethod' is not defined in the 'all_method_handlers' function. This suggests that the LLMMethod class was not properly imported or recognized in the methods/__init__.py file. To fix this, ensure that LLMMethod is correctly imported at the top of the methods/__init__.py file where the method handlers are defined."], "exp_name": "2-test_run_big", "metrics": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+
+let lastClick = 0;
+let firstFrameTime = undefined;
+
+let nodes = [];
+let edges = [];
+
+let lastScrollPos = 0;
+
+setup = () => {
+  canvas = createCanvas(...updateTargetDims());
+};
+
+class Node {
+  x;
+  y;
+  size;
+  xT;
+  yT;
+  xB;
+  yB;
+  treeInd;
+  color;
+  relSize;
+  animationStart = Number.MAX_VALUE;
+  animationProgress = 0;
+  isStatic = false;
+  hasChildren = false;
+  isRootNode = true;
+  isStarred = false;
+  selected = false;
+  renderSize = 10;
+  edges = [];
+  bgCol;
+
+  constructor(x, y, relSize, treeInd) {
+    const minSize = 35;
+    const maxSize = 60;
+
+    const maxColor = 10;
+    const minColor = 125;
+
+    this.relSize = relSize;
+    this.treeInd = treeInd;
+    this.size = minSize + (maxSize - minSize) * relSize;
+    this.color = minColor + (maxColor - minColor) * relSize;
+    this.bgCol = Math.round(Math.max(this.color / 2, 0));
+
+    this.x = x;
+    this.y = y;
+    this.xT = x;
+    this.yT = y - this.size / 2;
+    this.xB = x;
+    this.yB = y + this.size / 2;
+
+    nodes.push(this);
+  }
+
+  startAnimation = (offset = 0) => {
+    if (this.animationStart == Number.MAX_VALUE)
+      this.animationStart = globalTime + offset;
+  };
+
+  child = (node) => {
+    let edge = new Edge(this, node);
+    this.edges.push(edge);
+    edges.push(edge);
+    this.hasChildren = true;
+    node.isRootNode = false;
+    return node;
+  };
+
+  render = () => {
+    if (globalTime - this.animationStart < 0) return;
+
+    const mouseXlocalCoords = (mouseX - width / 2) / scaleFactor;
+    const mouseYlocalCoords = (mouseY - height / 2) / scaleFactor;
+    const isMouseOver =
+      dist(mouseXlocalCoords, mouseYlocalCoords, this.x, this.y) <
+      this.renderSize / 1.5;
+    if (isMouseOver) cursor(HAND);
+    if (isMouseOver && mouseIsPressed) {
+      nodes.forEach((n) => (n.selected = false));
+      this.selected = true;
+      setCodeAndPlan(
+        treeStructData.code[this.treeInd],
+        treeStructData.plan[this.treeInd],
+      );
+      manualSelection = true;
+    }
+
+    this.renderSize = this.size;
+    if (!this.isStatic) {
+      this.animationProgress = animEase(
+        (globalTime - this.animationStart) / 1000,
+      );
+      if (this.animationProgress >= 1) {
+        this.isStatic = true;
+      } else {
+        this.renderSize =
+          this.size *
+          (0.8 +
+            0.2 *
+              (-3.33 * this.animationProgress ** 2 +
+                4.33 * this.animationProgress));
+      }
+    }
+
+    fill(this.color);
+    if (this.selected) {
+      fill(accentCol);
+    }
+
+    noStroke();
+    square(
+      this.x - this.renderSize / 2,
+      this.y - this.renderSize / 2,
+      this.renderSize,
+      10,
+    );
+
+    noStroke();
+    textAlign(CENTER, CENTER);
+    textSize(this.renderSize / 2);
+    fill(255);
+    // fill(lerpColor(color(accentCol), color(255), this.animationProgress))
+    text("{ }", this.x, this.y - 1);
+    // DEBUG PRINT:
+    // text(round(this.relSize, 2), this.x, this.y - 1)
+    // text(this.treeInd, this.x, this.y + 15)
+
+    const dotAnimThreshold = 0.85;
+    if (this.isStarred && this.animationProgress >= dotAnimThreshold) {
+      let dotAnimProgress =
+        (this.animationProgress - dotAnimThreshold) / (1 - dotAnimThreshold);
+      textSize(
+        ((-3.33 * dotAnimProgress ** 2 + 4.33 * dotAnimProgress) *
+          this.renderSize) /
+          2,
+      );
+      if (this.selected) {
+        fill(0);
+        stroke(0);
+      } else {
+        fill(accentCol);
+        stroke(accentCol);
+      }
+      strokeWeight((-(dotAnimProgress ** 2) + dotAnimProgress) * 2);
+      text("*", this.x + 20, this.y - 11);
+      noStroke();
+    }
+
+    if (!this.isStatic) {
+      fill(bgCol);
+      const progressAnimBaseSize = this.renderSize + 5;
+      rect(
+        this.x - progressAnimBaseSize / 2,
+        this.y -
+          progressAnimBaseSize / 2 +
+          progressAnimBaseSize * this.animationProgress,
+        progressAnimBaseSize,
+        progressAnimBaseSize * (1 - this.animationProgress),
+      );
+    }
+    if (this.animationProgress >= 0.9) {
+      this.edges
+        .sort((a, b) => a.color() - b.color())
+        .forEach((e, i) => {
+          e.startAnimation((i / this.edges.length) ** 2 * 1000);
+        });
+    }
+  };
+}
+
+class Edge {
+  nodeT;
+  nodeB;
+  animX = 0;
+  animY = 0;
+  animationStart = Number.MAX_VALUE;
+  animationProgress = 0;
+  isStatic = false;
+  weight = 0;
+
+  constructor(nodeT, nodeB) {
+    this.nodeT = nodeT;
+    this.nodeB = nodeB;
+    this.weight = 2 + nodeB.relSize * 1;
+  }
+
+  color = () => this.nodeB.color;
+
+  startAnimation = (offset = 0) => {
+    if (this.animationStart == Number.MAX_VALUE)
+      this.animationStart = globalTime + offset;
+  };
+
+  render = () => {
+    if (globalTime - this.animationStart < 0) return;
+
+    if (!this.isStatic) {
+      this.animationProgress = animEase(
+        (globalTime - this.animationStart) / 1000,
+      );
+      if (this.animationProgress >= 1) {
+        this.isStatic = true;
+        this.animX = this.nodeB.xT;
+        this.animY = this.nodeB.yT;
+      } else {
+        this.animX = bezierPoint(
+          this.nodeT.xB,
+          this.nodeT.xB,
+          this.nodeB.xT,
+          this.nodeB.xT,
+          this.animationProgress,
+        );
+
+        this.animY = bezierPoint(
+          this.nodeT.yB,
+          (this.nodeT.yB + this.nodeB.yT) / 2,
+          (this.nodeT.yB + this.nodeB.yT) / 2,
+          this.nodeB.yT,
+          this.animationProgress,
+        );
+      }
+    }
+    if (this.animationProgress >= 0.97) {
+      this.nodeB.startAnimation();
+    }
+
+    strokeWeight(this.weight);
+    noFill();
+    stroke(
+      lerpColor(color(bgCol), color(accentCol), this.nodeB.relSize * 1 + 0.7),
+    );
+    bezier(
+      this.nodeT.xB,
+      this.nodeT.yB,
+      this.nodeT.xB,
+      (this.nodeT.yB + this.nodeB.yT) / 2,
+      this.animX,
+      (this.nodeT.yB + this.nodeB.yT) / 2,
+      this.animX,
+      this.animY,
+    );
+  };
+}
+
+draw = () => {
+  cursor(ARROW);
+  frameRate(120);
+  if (!firstFrameTime && frameCount <= 1) {
+    firstFrameTime = millis();
+  }
+  // ---- update global animation state ----
+  const initialSpeedScalingEaseIO =
+    (cos(min((millis() - firstFrameTime) / 8000, 1.0) * PI) + 1) / 2;
+  const initialSpeedScalingEase =
+    (cos(min((millis() - firstFrameTime) / 8000, 1.0) ** (1 / 2) * PI) + 1) / 2;
+  const initAnimationSpeedFactor = 1.0 - 0.4 * initialSpeedScalingEaseIO;
+  // update global scaling-aware clock
+  globalTime += globalAnimSpeed * initAnimationSpeedFactor * deltaTime;
+
+  if (nodes.length == 0) {
+    const spacingHeight = height * 1.3;
+    const spacingWidth = width * 1.3;
+    treeStructData.layout.forEach((lay, index) => {
+      new Node(
+        spacingWidth * lay[0] - spacingWidth / 2,
+        20 + spacingHeight * lay[1] - spacingHeight / 2,
+        1 - treeStructData.metrics[index],
+        index,
+      );
+    });
+    treeStructData.edges.forEach((ind) => {
+      nodes[ind[0]].child(nodes[ind[1]]);
+    });
+    nodes.forEach((n) => {
+      if (n.isRootNode) n.startAnimation();
+    });
+    nodes[0].selected = true;
+    setCodeAndPlan(
+      treeStructData.code[0],
+      treeStructData.plan[0],
+    )
+  }
+
+  const staticNodes = nodes.filter(
+    (n) => n.isStatic || n.animationProgress >= 0.7,
+  );
+  if (staticNodes.length > 0) {
+    const largestNode = staticNodes.reduce((prev, current) =>
+      prev.relSize > current.relSize ? prev : current,
+    );
+    if (!manualSelection) {
+      if (!largestNode.selected) {
+        setCodeAndPlan(
+          treeStructData.code[largestNode.treeInd],
+          treeStructData.plan[largestNode.treeInd],
+        );
+      }
+      staticNodes.forEach((node) => {
+        node.selected = node === largestNode;
+      });
+    }
+  }
+  background(bgCol);
+  // global animation transforms
+  translate(width / 2, height / 2);
+  scale(scaleFactor);
+
+  
+  // ---- fg render ----
+  edges.forEach((e) => e.render());
+  nodes.forEach((n) => n.render());
+  
+};
+
+    </script>
+    <title>AIDE Run Visualization</title>
+    <style>
+      body,
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        overflow: scroll;
+      }
+      body {
+        background-color: #f2f0e7;
+      }
+      canvas {
+        float: left;
+        height: 100vh;
+        width: 40vw;
+      }
+      #text-container {
+        float: right;
+        height: 100vh;
+        width: 50vw;
+        background-color: #282c34;
+      }
+      #plan {
+        /* border-left: 2px solid #282c34; */
+        background-color: #282c34;
+        color: #f2f0e7;
+        min-height: 5rem;
+        padding: 1em 0 1em 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <pre
+      id="text-container"
+    ><div id="plan"></div><hr><code id="code" class="language-python"></code></pre>
+  </body>
+</html>

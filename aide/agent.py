@@ -51,6 +51,7 @@ class Agent:
         cfg: Config,
         journal: Journal,
         env_yml: str = None,  # Add a parameter for the environment.yml content
+        baseline_code: str = None,
     ):
         super().__init__()
         self.task_desc = task_desc
@@ -59,7 +60,7 @@ class Agent:
         self.journal = journal
         self.data_preview: str | None = None
         self.env_yml = env_yml  # Store the environment.yml content
-
+        self.baseline_code = baseline_code
     def search_policy(self) -> Node | None:
         """Select a node to work on (or None to draft a new node)."""
         search_cfg = self.acfg.search
@@ -130,13 +131,14 @@ class Agent:
     @property
     def _prompt_impl_guideline(self):
         impl_guideline = [
-            "You must ONLY implement the scripts/MyMethod.py file. Your code will be copied directly to this file and evaluated externally.",
+            "You must ONLY implement the scripts/LLMMethod.py file. Your code will be copied directly to this file and evaluated externally.",
             "The code should be a complete Python file that implements the solution described in the task.",
             "Do not include any code to load or save data - focus only on implementing the method as required by the task.",
             "Your solution will be evaluated using an external evaluation script that will measure performance metrics.",
             "No parts of the code should be skipped, write the complete implementation.",
             f"Be aware of the running time of the code, it should complete within {humanize.naturaldelta(self.cfg.exec.timeout)}.",
             "You can save temporary files in the './working/' directory if needed during processing.",
+            f"You can use the following code as a baseline implementation: \n\n```python\n{self.baseline_code}\n```"
         ]
         if self.acfg.expose_prediction:
             impl_guideline.append(
@@ -157,7 +159,7 @@ class Agent:
         return {
             "Response format": (
                 "Your response should be a brief outline/sketch of your proposed solution in natural language (3-5 sentences), "
-                "followed by a single markdown code block (wrapped in ```) which implements the complete scripts/MyMethod.py file. "
+                "followed by a single markdown code block (wrapped in ```) which implements the complete scripts/LLMMethod.py file. "
                 "There should be no additional headings or text in your response. Just natural language text followed by a newline and then the markdown code block. "
             )
         }
@@ -188,7 +190,7 @@ class Agent:
         prompt: Any = {
             "Introduction": (
                 "You are an expert machine learning engineer working on a challenging ML research competition. "
-                "You need to implement a solution for the given task in the scripts/MyMethod.py file. "
+                "You need to implement a solution for the given task in the scripts/LLMMethod.py file. "
                 "We will now provide a description of the task."
             ),
             "Task description": self.task_desc,
@@ -204,7 +206,7 @@ class Agent:
                 "The solution sketch should be 3-5 sentences.",
                 "Don't suggest to do EDA.",
                 "Focus only on implementing the method required by the task.",
-                "Remember that your code will be placed in scripts/MyMethod.py - you should not implement anything else.",
+                "Remember that your code will be placed in scripts/LLMMethod.py - you should not implement anything else.",
             ],
         }
         prompt["Instructions"] |= self._prompt_impl_guideline
@@ -223,7 +225,7 @@ class Agent:
                 "You are provided with a previously developed solution below and should improve it to increase performance. "
                 "For this you should first outline a brief plan in natural language for how the solution can be improved and "
                 "then implement this improvement in Python based on the provided previous solution. "
-                "Your code will be placed in scripts/MyMethod.py."
+                "Your code will be placed in scripts/LLMMethod.py."
             ),
             "Task description": self.task_desc,
             "Memory": self.journal.generate_summary(),
@@ -242,7 +244,7 @@ class Agent:
                 "Take the Memory section into consideration when proposing the improvement.",
                 "The solution sketch should be 3-5 sentences.",
                 "Don't suggest to do EDA.",
-                "Remember that your code will be placed in scripts/MyMethod.py - you should not implement anything else.",
+                "Remember that your code will be placed in scripts/LLMMethod.py - you should not implement anything else.",
             ],
         }
         prompt["Instructions"] |= self._prompt_impl_guideline
@@ -260,7 +262,7 @@ class Agent:
                 "You are an expert machine learning engineer working on a challenging ML research competition. "
                 "Your previous solution had a bug, so based on the information below, you should revise it in order to fix this bug. "
                 "Your response should be an implementation outline in natural language,"
-                " followed by a single markdown code block which implements the bugfix/solution for scripts/MyMethod.py."
+                " followed by a single markdown code block which implements the bugfix/solution for scripts/LLMMethod.py."
             ),
             "Task description": self.task_desc,
             "Previous (buggy) implementation": wrap_code(parent_node.code),
@@ -272,7 +274,7 @@ class Agent:
             "Bugfix improvement sketch guideline": [
                 "You should write a brief natural language description (3-5 sentences) of how the issue in the previous implementation can be fixed.",
                 "Don't suggest to do EDA.",
-                "Remember that your code will be placed in scripts/MyMethod.py - you should not implement anything else.",
+                "Remember that your code will be placed in scripts/LLMMethod.py - you should not implement anything else.",
             ],
         }
         prompt["Instructions"] |= self._prompt_impl_guideline
