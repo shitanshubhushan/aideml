@@ -1,11 +1,11 @@
 ## Changes Added by Me:
 
-1) In run.py, Load MyMethod.py to be passed as baseline in prompt.
-2) In agent.py, updated all prompts to be less kaggle competition focused and general changes to prompt
-3) In interpreter.py, Updated it so that it runs our evaluation.py to get a score for each attempt
+1) In run.py, Load MyMethod.py to be passed as baseline in prompt. https://github.com/shitanshubhushan/aideml/blob/ce6a9be66ced6b83713a4d987e9954f5ef852431/aide/run.py#L63
+2) In agent.py, updated all prompts to be less kaggle competition focused and general changes to prompt https://github.com/shitanshubhushan/aideml/blob/ce6a9be66ced6b83713a4d987e9954f5ef852431/aide/agent.py#L100 https://github.com/shitanshubhushan/aideml/blob/ce6a9be66ced6b83713a4d987e9954f5ef852431/aide/agent.py#L133 https://github.com/shitanshubhushan/aideml/blob/ce6a9be66ced6b83713a4d987e9954f5ef852431/aide/agent.py#L191 https://github.com/shitanshubhushan/aideml/blob/ce6a9be66ced6b83713a4d987e9954f5ef852431/aide/agent.py#L223 https://github.com/shitanshubhushan/aideml/blob/ce6a9be66ced6b83713a4d987e9954f5ef852431/aide/agent.py#L261 https://github.com/shitanshubhushan/aideml/blob/ce6a9be66ced6b83713a4d987e9954f5ef852431/aide/agent.py#L320
+3) In interpreter.py, Updated it so that it runs our evaluation.py to get a score for each attempt https://github.com/shitanshubhushan/aideml/blob/ce6a9be66ced6b83713a4d987e9954f5ef852431/aide/interpreter.py#L216
 
 ### High-level Changes:
-1) Explicity tell the model that it can only edit the LLMMethod.py file (This is a copy of MyMethod.py). Any change the agent makes is copied over to this LLMMethod.py file.
+1) Explicity tell the model that it can only edit the LLMMethod.py file (This is a copy of MyMethod.py). Any change the agent makes is copied over to this LLMMethod.py file. (https://github.com/shitanshubhushan/aideml/blob/main/aide/benchmarks_base/backdoor-trigger-recovery/env/methods/LLMMethod.py)
 2) Use symlinks by making "copy = false" to save space
 3) Run our own eval script to get score
 
