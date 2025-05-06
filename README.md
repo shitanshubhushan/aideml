@@ -20,6 +20,8 @@ Would Also need to add an LLMMethod.py file in Methods/ which will be the same a
 
 You might also need to remove the import dotenv() part
 
+For running experiments, first create task conda env, then cd - to pip install -e. and then go to task folder and run the command
+
 ## TO-DO Left:
 
 1) Truncate files for prompt to reduce context length
