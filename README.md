@@ -20,6 +20,11 @@ Would Also need to add an LLMMethod.py file in Methods/ which will be the same a
 
 You might also need to remove the import dotenv() part
 
+## TO-DO Left:
+
+1) Truncate files for prompt to reduce context length
+2) Run Experiments
+
 #######################################################################################
 
 <h1 align="center">AIDE: The Machine Learning Engineer Agent</h1>
