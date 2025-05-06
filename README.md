@@ -18,6 +18,8 @@ Would Also need to add an LLMMethod.py file in Methods/ which will be the same a
 
 **NOTE:** Would need to update paths accordingly cause in MLAB the workspace was in /env but here the workspace will be like /exp_name and that will have the /input folder which will have all the env files.
 
+You might also need to remove the import dotenv() part
+
 #######################################################################################
 
 <h1 align="center">AIDE: The Machine Learning Engineer Agent</h1>
