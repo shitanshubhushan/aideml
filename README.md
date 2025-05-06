@@ -16,7 +16,7 @@ aide data_dir="env/" desc_file="scripts/research_problem.txt" agent.code.model=g
 
 Would Also need to add an LLMMethod.py file in Methods/ which will be the same as MyMethod but the agent will be allowed to edit this file. Will need to register this method too.
 
-**NOTE:** Would need to update paths accordingly cause in MLAB the workspace was in /env but here the workspace will be like /exp_name and that will have the /input folder which will have all the env files.
+**NOTE:** Would need to update paths accordingly cause in MLAB the workspace was in /env but here the workspace will be like /exp_name and that will have the /input folder which will have all the env files. Example: https://github.com/shitanshubhushan/aideml/blob/d4cedd205079b7b63a67343712bcbe096ecbb3cc/aide/benchmarks_base/backdoor-trigger-recovery/env/evaluation.py#L152
 
 You might also need to remove the import dotenv() part
 
